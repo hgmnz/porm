@@ -1,4 +1,7 @@
+require 'rubygems'
+require 'active_support'
 require File.expand_path('porm/table', File.dirname(__FILE__))
+require File.expand_path('porm/scope', File.dirname(__FILE__))
 
 module Porm
   extend self

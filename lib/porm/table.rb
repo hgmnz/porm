@@ -1,5 +1,3 @@
-require 'rubygems'
-require 'active_support'
 module Porm
   module Table
     def self.included(base)
@@ -16,6 +14,7 @@ module Porm
       def attributes(&block)
         table_definition = Porm::Table::Definition.new(table_name)
         block.call table_definition
+        self.send(:attr_accessor, *table_definition.column_names)
         Porm.connection.exec(table_definition.to_sql)
       end
 
@@ -23,6 +22,18 @@ module Porm
         inserter = Porm::Table::Insertion.new(table_name)
         inserter.insert(attributes)
         Porm.connection.exec(inserter.to_sql)
+      end
+
+      def where(conditions)
+        Porm::Scope.new(self, :conditions => conditions)
+      end
+
+      def from_pgconn(pg_result)
+        object = self.new
+        pg_result.each do |attribute, value|
+          object.send("#{attribute}=", value)
+        end
+        object
       end
     end
 
@@ -77,6 +88,10 @@ module Porm
         sql + @columns.map do |column|
           "add column #{column[:name]} #{column[:type]}"
         end.join(', ')
+      end
+
+      def column_names
+        columns.map { |column| column[:name]}
       end
 
     end
