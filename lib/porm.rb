@@ -13,7 +13,7 @@ module Porm
     @pg_conn = connection
   end
 
-  def sql_escape(string)
-    "E'#{string}'"
+  def sql_escape(stringish)
+    "E'#{stringish.to_s}'"
   end
 end
