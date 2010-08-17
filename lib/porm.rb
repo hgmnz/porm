@@ -16,4 +16,10 @@ module Porm
   def sql_escape(stringish)
     "E'#{stringish.to_s}'"
   end
+
+  def execute(sql)
+    connection.exec(sql)
+  end
+  alias :select :execute
+
 end

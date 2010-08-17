@@ -10,20 +10,20 @@ module Porm
     module ClassMethods
       def attributes(&block)
         unless table_exists?
-          Porm.connection.exec(<<-SQL)
+          Porm.execute(<<-SQL)
             create table #{table_name}();
           SQL
           table_definition = Porm::Table::Definition.new(table_name)
           block.call table_definition
           self.send(:attr_accessor, *table_definition.column_names)
-          Porm.connection.exec(table_definition.to_sql)
+          Porm.execute(table_definition.to_sql)
         end
       end
 
       def create(attributes)
         inserter = Porm::Table::Insertion.new(table_name)
         inserter.insert(attributes)
-        Porm.connection.exec(inserter.to_sql)
+        Porm.execute(inserter.to_sql)
       end
 
       def where(conditions)
@@ -40,7 +40,7 @@ module Porm
 
       protected
       def table_exists?
-        result = Porm.connection.exec(<<-SQL)
+        result = Porm.select(<<-SQL)
           SELECT count(*)
           FROM pg_catalog.pg_class c
                LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace

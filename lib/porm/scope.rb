@@ -7,7 +7,7 @@ module Porm
     end
 
     def method_missing(meth, *args)
-      results = Porm.connection.exec(to_sql)
+      results = Porm.select(to_sql)
       list = results.map {|e| self.klass.from_pgconn(e)}
       list.send(meth, *args)
     end
