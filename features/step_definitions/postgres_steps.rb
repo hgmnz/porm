@@ -34,3 +34,6 @@ Then /^the following (.*) record exists:$/ do |class_name, attributes|
   end
 end
 
+Given /^the table "([^"]*)" exists$/ do |table_name|
+  PG_CONN.exec("create table #{table_name} ()")
+end

@@ -3,7 +3,7 @@ Feature: As a developer
          so that I can retreive persisted data
 
   Scenario:
-    Given the I save the following as user.rb:
+    Given I save the following as user.rb:
     """
       class User
         include Porm::Table

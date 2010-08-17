@@ -3,19 +3,21 @@ module Porm
     def self.included(base)
       klass = base.to_s
       @@table_name = klass.pluralize.downcase
-      Porm.connection.exec(<<-SQL)
-        create table #{@@table_name}();
-      SQL
       base.extend ClassMethods
       base.cattr_accessor :table_name
     end
 
     module ClassMethods
       def attributes(&block)
-        table_definition = Porm::Table::Definition.new(table_name)
-        block.call table_definition
-        self.send(:attr_accessor, *table_definition.column_names)
-        Porm.connection.exec(table_definition.to_sql)
+        unless table_exists?
+          Porm.connection.exec(<<-SQL)
+            create table #{table_name}();
+          SQL
+          table_definition = Porm::Table::Definition.new(table_name)
+          block.call table_definition
+          self.send(:attr_accessor, *table_definition.column_names)
+          Porm.connection.exec(table_definition.to_sql)
+        end
       end
 
       def create(attributes)
@@ -34,6 +36,22 @@ module Porm
           object.send("#{attribute}=", value)
         end
         object
+      end
+
+      protected
+      def table_exists?
+        result = Porm.connection.exec(<<-SQL)
+          SELECT count(*)
+          FROM pg_catalog.pg_class c
+               LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+          WHERE c.relkind IN ('r','')
+                AND n.nspname <> 'pg_catalog'
+                AND n.nspname <> 'information_schema'
+                AND n.nspname !~ '^pg_toast'
+            AND pg_catalog.pg_table_is_visible(c.oid)
+            AND c.relname = '#{self.table_name}';
+        SQL
+        result[0]['count'] == "1"
       end
     end
 

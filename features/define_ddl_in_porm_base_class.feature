@@ -3,7 +3,7 @@ Feature: As a developer
          So that it persists in the postgres database
 
   Scenario:
-    Given the I save the following as user.rb:
+    Given I save the following as user.rb:
     """
       class User
         include Porm::Table
