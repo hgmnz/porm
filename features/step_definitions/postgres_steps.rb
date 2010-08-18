@@ -37,3 +37,8 @@ end
 Given /^the table "([^"]*)" exists$/ do |table_name|
   Porm.execute("create table #{table_name} ()")
 end
+
+Then /^there should be (\d+) (\w+)s?$/ do |count, table_name|
+  result = Porm.select("select count(*) from #{table_name.pluralize}")
+  result[0]["count"].should == count
+end

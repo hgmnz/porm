@@ -2,13 +2,14 @@ module Porm
   module Table
     def self.included(base)
       klass = base.to_s
-      @@table_name = klass.pluralize.downcase
       base.extend ClassMethods
-      base.cattr_accessor :table_name, :column_names
+      class << base
+        attr_accessor :table_name, :column_names, :superclass
+      end
     end
 
     def save
-      inserter = Porm::Table::Insertion.new(self.table_name)
+      inserter = Porm::Table::Insertion.new(self.class.table_name)
       inserter.insert(properties)
       Porm.execute(inserter.to_sql)
       self
@@ -23,9 +24,10 @@ module Porm
 
     module ClassMethods
       def attributes(&block)
+        self.table_name = self.to_s.pluralize.downcase
         unless table_exists?
           Porm.execute(<<-SQL)
-            create table #{table_name}();
+            create table #{table_name}() #{inheritance_clause};
           SQL
           table_definition = Porm::Table::Definition.new(table_name)
           block.call table_definition
@@ -71,6 +73,22 @@ module Porm
         SQL
         result[0]['count'] == "1"
       end
+
+      def inherited(subclass)
+        subclass.inherited_from!(self)
+      end
+
+      def inheritance_clause
+        "inherits(#{tableize(superclass)})" if superclass
+      end
+
+      def inherited_from!(superclass)
+        self.superclass = superclass
+      end
+
+      def tableize(s)
+        s.to_s.downcase.pluralize
+      end
     end
 
     class Insertion
@@ -111,12 +129,17 @@ module Porm
 
       def string(*args)
         self.columns << { :name => args.first,
-                     :type => 'character varying(255)' }
+                          :type => 'character varying(255)' }
       end
 
       def datetime(*args)
         self.columns << { :name => args.first,
-                     :type => 'timestamp without time zone' }
+                          :type => 'timestamp without time zone' }
+      end
+
+      def boolean(*args)
+        self.columns << { :name => args.first,
+                          :type => 'boolean' }
       end
 
       def to_sql
