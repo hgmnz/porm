@@ -3,15 +3,27 @@ require 'tempfile'
 require 'ruby-debug'
 require 'lib/porm'
 
+Porm.connection = PGconn.open(:dbname => 'porm_test')
 Before do
-  postgres_connection = PGconn.open(:dbname => 'postgres')
-  postgres_connection.exec('drop database if exists porm_test')
-  postgres_connection.exec('create database porm_test')
-  postgres_connection.close
-  Porm.connection = PGconn.open(:dbname => 'porm_test')
-  PG_CONN = Porm.connection
+  puts "running Before"
+  all_tables.each do |table_name|
+    Porm.execute("drop table #{table_name};")
+  end
 end
 
-After do
-  PG_CONN.close
+at_exit do
+  Porm.connection.close
+end
+
+def all_tables
+  Porm.select(<<-SQL).map { |row| row["Name"] }
+    SELECT c.relname as "Name"
+    FROM pg_catalog.pg_class c
+         LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relkind IN ('r','')
+          AND n.nspname <> 'pg_catalog'
+          AND n.nspname <> 'information_schema'
+          AND n.nspname !~ '^pg_toast'
+      AND pg_catalog.pg_table_is_visible(c.oid)
+  SQL
 end

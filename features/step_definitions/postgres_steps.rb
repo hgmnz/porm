@@ -1,5 +1,5 @@
 Then /^the (\w+) table should exist with the following columns:$/ do |table_name, columns|
-  table_query_result = PG_CONN.exec(<<-SQL)
+  table_query_result = Porm.connection.exec(<<-SQL)
     SELECT c.oid
     FROM pg_catalog.pg_class c
          LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
@@ -10,7 +10,7 @@ Then /^the (\w+) table should exist with the following columns:$/ do |table_name
     raise "Expected table #{table_name} to exist"
   end
 
-  column_query_results = PG_CONN.exec(<<-SQL)
+  column_query_results = Porm.connection.exec(<<-SQL)
     SELECT a.attname as column_name,
       pg_catalog.format_type(a.atttypid, a.atttypmod) data_type,
       (SELECT substring(pg_catalog.pg_get_expr(d.adbin, d.adrelid) for 128)
@@ -28,12 +28,12 @@ Then /^the (\w+) table should exist with the following columns:$/ do |table_name
 end
 
 Then /^the following (.*) record exists:$/ do |class_name, attributes|
-  result = PG_CONN.exec("select * from #{class_name.constantize.table_name}")
+  result = Porm.connection.exec("select * from #{class_name.constantize.table_name}")
   attributes.hashes.each do |attribute|
     result.detect { |row| row[attribute["name"]] == attribute["value"] }.should_not be_nil, "Expected #{attribute["name"]} to be #{attribute["value"]}"
   end
 end
 
 Given /^the table "([^"]*)" exists$/ do |table_name|
-  PG_CONN.exec("create table #{table_name} ()")
+  Porm.execute("create table #{table_name} ()")
 end

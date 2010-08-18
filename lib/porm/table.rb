@@ -4,7 +4,21 @@ module Porm
       klass = base.to_s
       @@table_name = klass.pluralize.downcase
       base.extend ClassMethods
-      base.cattr_accessor :table_name
+      base.cattr_accessor :table_name, :column_names
+    end
+
+    def save
+      inserter = Porm::Table::Insertion.new(self.table_name)
+      inserter.insert(properties)
+      Porm.execute(inserter.to_sql)
+      self
+    end
+
+    def properties
+      self.class.column_names.inject({}) do |accum, column_name|
+        accum[column_name] = self.send(column_name)
+        accum
+      end
     end
 
     module ClassMethods
@@ -15,20 +29,22 @@ module Porm
           SQL
           table_definition = Porm::Table::Definition.new(table_name)
           block.call table_definition
+          self.column_names = table_definition.column_names
           self.send(:attr_accessor, *table_definition.column_names)
           Porm.execute(table_definition.to_sql)
         end
       end
 
       def create(attributes)
-        inserter = Porm::Table::Insertion.new(table_name)
-        inserter.insert(attributes)
-        Porm.execute(inserter.to_sql)
+        instance = self.build(attributes)
+        instance.save
+        Porm::CreateSuccessProxy.new(instance)
       end
 
       def where(conditions)
         Porm::Scope.new(self, :conditions => conditions)
       end
+
 
       def from_pgconn(pg_result)
         object = self.new
@@ -37,8 +53,10 @@ module Porm
         end
         object
       end
+      alias :build :from_pgconn
 
       protected
+
       def table_exists?
         result = Porm.select(<<-SQL)
           SELECT count(*)
@@ -92,24 +110,24 @@ module Porm
       end
 
       def string(*args)
-        columns << { :name => args.first,
+        self.columns << { :name => args.first,
                      :type => 'character varying(255)' }
       end
 
       def datetime(*args)
-        columns << { :name => args.first,
+        self.columns << { :name => args.first,
                      :type => 'timestamp without time zone' }
       end
 
       def to_sql
         sql = "alter table #{@table_name} "
-        sql + @columns.map do |column|
+        sql + self.columns.map do |column|
           "add column #{column[:name]} #{column[:type]}"
         end.join(', ')
       end
 
       def column_names
-        columns.map { |column| column[:name]}
+        self.columns.map { |column| column[:name]}
       end
 
     end

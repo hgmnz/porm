@@ -2,6 +2,8 @@ require 'rubygems'
 require 'active_support'
 require File.expand_path('porm/table', File.dirname(__FILE__))
 require File.expand_path('porm/scope', File.dirname(__FILE__))
+require File.expand_path('porm/create_success_proxy', File.dirname(__FILE__))
+require File.expand_path('porm/create_failure_proxy', File.dirname(__FILE__))
 
 module Porm
   extend self
@@ -14,7 +16,11 @@ module Porm
   end
 
   def sql_escape(stringish)
-    "E'#{stringish.to_s}'"
+    if stringish.nil?
+      "NULL"
+    else
+      "E'#{stringish.to_s}'"
+    end
   end
 
   def execute(sql)
