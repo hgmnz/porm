@@ -10,3 +10,8 @@ When /^I run the following code:$/ do |code|
   eval(code)
 end
 
+Then /^the following should fail:$/ do |code|
+  result = nil
+  eval(code).on_failure(lambda { result = 'foo' })
+  result.should == 'foo'
+end

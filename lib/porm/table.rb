@@ -17,6 +17,8 @@ module Porm
       rescue PGError => e
         if e.error =~ /ERROR:  insert or update on table .* violates foreign key constraint/
           false
+        elsif e.error =~ /ERROR:  null value in column "\w+" violates not-null constraint/
+          false
         else
           raise e
         end
@@ -132,51 +134,5 @@ module Porm
 
     end
 
-    class Definition
-      attr_accessor :columns
-      def initialize(table_name, opts = {})
-        @columns    = []
-        @columns    << {:name => 'id', :type => 'serial primary key'} unless opts[:no_id]
-        @table_name = table_name
-      end
-
-      def string(*args)
-        self.columns << { :name => args.first,
-                          :type => 'character varying(255)' }
-      end
-
-      def datetime(*args)
-        self.columns << { :name => args.first,
-                          :type => 'timestamp without time zone' }
-      end
-
-      def boolean(*args)
-        self.columns << { :name => args.first,
-                          :type => 'boolean' }
-      end
-
-      def integer(*args)
-        self.columns << { :name => args.first,
-                          :type => 'integer' }
-      end
-
-      def references(*args)
-        self.columns << { :name       => "#{args.first}_id",
-                          :type       => 'integer',
-                          :constraint => "references #{Porm.tableize(args.first)}(id)"}
-      end
-
-      def to_sql
-        sql = "alter table #{@table_name} "
-        sql + self.columns.map do |column|
-          "add column #{column[:name]} #{column[:type]} #{column[:constraint]}"
-        end.join(', ')
-      end
-
-      def column_names
-        self.columns.map { |column| column[:name]}
-      end
-
-    end
   end
 end

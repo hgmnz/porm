@@ -4,6 +4,7 @@ require File.expand_path('porm/table', File.dirname(__FILE__))
 require File.expand_path('porm/scope', File.dirname(__FILE__))
 require File.expand_path('porm/create_success_proxy', File.dirname(__FILE__))
 require File.expand_path('porm/create_failure_proxy', File.dirname(__FILE__))
+require File.expand_path('porm/definition', File.dirname(__FILE__))
 
 module Porm
   extend self

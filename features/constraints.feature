@@ -21,12 +21,27 @@ Feature: DB constraints
       end
     end
     """
-    Given @result is nil
-    When I run the following code:
+    Then the following should fail:
     """
-    Project.create(:user_id => 1).
-      on_failure(lambda { @result = 'ocean' })
+    Project.create(:user_id => 1)
     """
-    Then @result should be "ocean"
 
+  Scenario: Not null
+    Given I save the following as user.rb:
+    """
+      class User
+      include Porm::Table
 
+      attributes do |t|
+        t.string :login, :null => false
+        end
+      end
+    """
+    Then the users table should exist with the following columns:
+      | name          | type                        | not null |
+      | id            | integer                     | t        |
+      | login         | character varying(255)      | t        |
+    And the following should fail:
+    """
+    User.create(:login => nil)
+    """
