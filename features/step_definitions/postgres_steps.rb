@@ -22,8 +22,11 @@ Then /^the (\w+) table should exist with the following columns:$/ do |table_name
   SQL
 
   columns.hashes.each do |expected_column|
-    column_query_results.detect { |column| column["column_name"] == expected_column["name"] &&
-      column["data_type"] == expected_column["type"] }.should_not be_nil, "Expected #{expected_column.inspect} to exist"
+    column_query_results.detect do |column|
+      column["column_name"] == expected_column["name"] &&
+        column["data_type"] == expected_column["type"] &&
+        (expected_column["modifiers"].blank? || column["modifiers"] == expected_column["modifiers"])
+    end.should_not be_nil, "Expected #{expected_column.inspect} to exist"
   end
 end
 

@@ -15,9 +15,10 @@ Feature: As a developer
       end
     """
     Then the users table should exist with the following columns:
-      | name          | type                        |
-      | login         | character varying(255)      |
-      | date_of_birth | timestamp without time zone |
+      | name          | type                        | modifiers                         |
+      | id            | integer                     | nextval('users_id_seq'::regclass) |
+      | login         | character varying(255)      |                                   |
+      | date_of_birth | timestamp without time zone |                                   |
     When I create a User with the following attributes:
       | name          | value      |
       | login         | hgimenez   |

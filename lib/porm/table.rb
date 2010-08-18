@@ -27,9 +27,9 @@ module Porm
         self.table_name = self.to_s.pluralize.downcase
         unless table_exists?
           Porm.execute(<<-SQL)
-            create table #{table_name}() #{inheritance_clause};
+            create table #{table_name} () #{inheritance_clause};
           SQL
-          table_definition = Porm::Table::Definition.new(table_name)
+          table_definition = Porm::Table::Definition.new(table_name, :no_id => inherited?)
           block.call table_definition
           self.column_names = table_definition.column_names
           self.send(:attr_accessor, *table_definition.column_names)
@@ -79,7 +79,11 @@ module Porm
       end
 
       def inheritance_clause
-        "inherits(#{tableize(superclass)})" if superclass
+        "inherits(#{tableize(superclass)})" if inherited?
+      end
+
+      def inherited?
+        superclass
       end
 
       def inherited_from!(superclass)
@@ -109,11 +113,11 @@ module Porm
 
       private
       def column_names
-        attributes.inject([]) { |acc, e| acc + e.keys }
+        attributes.reject{|e| e.keys == ['id']}.inject([]) { |acc, e| acc + e.keys }
       end
 
       def column_values
-        attributes.inject([]) do |acc, e|
+        attributes.reject{|e| e.keys == ['id']}.inject([]) do |acc, e|
           acc + e.values.map { |value| Porm.sql_escape(value) }
         end
       end
@@ -122,8 +126,9 @@ module Porm
 
     class Definition
       attr_accessor :columns
-      def initialize(table_name)
+      def initialize(table_name, opts = {})
         @columns    = []
+        @columns    << {:name => 'id', :type => 'serial'} unless opts[:no_id]
         @table_name = table_name
       end
 
@@ -140,6 +145,11 @@ module Porm
       def boolean(*args)
         self.columns << { :name => args.first,
                           :type => 'boolean' }
+      end
+
+      def integer(*args)
+        self.columns << { :name => args.first,
+                          :type => 'integer' }
       end
 
       def to_sql
