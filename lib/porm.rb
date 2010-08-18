@@ -28,4 +28,8 @@ module Porm
   end
   alias :select :execute
 
+  def tableize(s)
+    s.to_s.downcase.pluralize
+  end
+
 end

@@ -11,8 +11,16 @@ module Porm
     def save
       inserter = Porm::Table::Insertion.new(self.class.table_name)
       inserter.insert(properties)
-      Porm.execute(inserter.to_sql)
-      self
+      begin
+        Porm.execute(inserter.to_sql)
+        self
+      rescue PGError => e
+        if e.error =~ /ERROR:  insert or update on table .* violates foreign key constraint/
+          false
+        else
+          raise e
+        end
+      end
     end
 
     def properties
@@ -39,8 +47,11 @@ module Porm
 
       def create(attributes)
         instance = self.build(attributes)
-        instance.save
-        Porm::CreateSuccessProxy.new(instance)
+        if instance.save
+          Porm::CreateSuccessProxy.new(instance)
+        else
+          Porm::CreateFailureProxy.new(instance)
+        end
       end
 
       def where(conditions)
@@ -79,7 +90,7 @@ module Porm
       end
 
       def inheritance_clause
-        "inherits(#{tableize(superclass)})" if inherited?
+        "inherits(#{Porm.tableize(superclass)})" if inherited?
       end
 
       def inherited?
@@ -90,9 +101,6 @@ module Porm
         self.superclass = superclass
       end
 
-      def tableize(s)
-        s.to_s.downcase.pluralize
-      end
     end
 
     class Insertion
@@ -128,7 +136,7 @@ module Porm
       attr_accessor :columns
       def initialize(table_name, opts = {})
         @columns    = []
-        @columns    << {:name => 'id', :type => 'serial'} unless opts[:no_id]
+        @columns    << {:name => 'id', :type => 'serial primary key'} unless opts[:no_id]
         @table_name = table_name
       end
 
@@ -152,10 +160,16 @@ module Porm
                           :type => 'integer' }
       end
 
+      def references(*args)
+        self.columns << { :name       => "#{args.first}_id",
+                          :type       => 'integer',
+                          :constraint => "references #{Porm.tableize(args.first)}(id)"}
+      end
+
       def to_sql
         sql = "alter table #{@table_name} "
         sql + self.columns.map do |column|
-          "add column #{column[:name]} #{column[:type]}"
+          "add column #{column[:name]} #{column[:type]} #{column[:constraint]}"
         end.join(', ')
       end
 

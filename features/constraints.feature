@@ -1,6 +1,5 @@
 Feature: DB constraints
 
-  @wip
   Scenario: Foreign keys
     Given I save the following as user.rb:
     """
@@ -18,7 +17,16 @@ Feature: DB constraints
       include Porm::Table
 
       attributes do |t|
-        t.integer :user_id
+        t.references :user
       end
     end
     """
+    Given @result is nil
+    When I run the following code:
+    """
+    Project.create(:user_id => 1).
+      on_failure(lambda { @result = 'ocean' })
+    """
+    Then @result should be "ocean"
+
+

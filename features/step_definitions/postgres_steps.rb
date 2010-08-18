@@ -45,3 +45,27 @@ Then /^there should be (\d+) (\w+)s?$/ do |count, table_name|
   result = Porm.select("select count(*) from #{table_name.pluralize}")
   result[0]["count"].should == count
 end
+
+
+Then /^the (\w+) table should have the following index:$/ do |table_name, indexes|
+
+  actual_indexes = Porm.select(<<-INDEX_SQL).map { |r| r["index_def"] }
+    SELECT pg_catalog.pg_get_indexdef(i.indexrelid, 0, true) as index_def
+    FROM pg_catalog.pg_class c, pg_catalog.pg_class c2, pg_catalog.pg_index i
+    WHERE c.oid = '#{table_oid(table_name)}' AND c.oid = i.indrelid AND i.indexrelid = c2.oid
+  INDEX_SQL
+  indexes.raw.flatten.should include(*actual_indexes)
+end
+
+module OidHelper
+  def table_oid(table_name)
+    Porm.select(<<-OID_SELECT)[0]['oid'].to_i
+      SELECT c.oid
+      FROM pg_catalog.pg_class c
+           LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+      WHERE c.relname ~ '^(#{table_name})$'
+        AND pg_catalog.pg_table_is_visible(c.oid)
+     OID_SELECT
+  end
+end
+World(OidHelper)

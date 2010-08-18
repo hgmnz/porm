@@ -8,4 +8,3 @@ end
 Given /^the following (\w+) exists:$/ do |class_name, table|
   class_name.constantize.send(:create, Hash[*table.hashes.map.flatten])
 end
-

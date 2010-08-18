@@ -3,11 +3,11 @@ module Porm
     def initialize(object)
       @object = object
     end
-    def on_success(&block)
+    def on_success(block)
       self
     end
 
-    def on_failure(&block)
+    def on_failure(block)
       block.call @object
       self
     end
