@@ -21,7 +21,6 @@ Then /^the (\w+) table should exist with the following columns:$/ do |table_name
     WHERE a.attrelid = '#{table_query_result[0]["oid"]}' AND a.attnum > 0 AND NOT a.attisdropped
   SQL
 
-  column_query_results.map { |c| p c }
   columns.hashes.each do |expected_column|
     column_query_results.detect do |column|
       column["column_name"] == expected_column["name"] &&

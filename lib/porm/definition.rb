@@ -17,13 +17,6 @@ module Porm
                         :constraint => constraint_sql(constraints) }
     end
 
-    def datetime(*args)
-      constraints = extract_constraints_from(args)
-      self.columns << { :name       => args.first,
-                        :type       => 'timestamp without time zone',
-                        :constraint => constraint_sql(constraints) }
-    end
-
     def boolean(*args)
       constraints = extract_constraints_from(args)
       self.columns << { :name       => args.first,
@@ -104,6 +97,69 @@ module Porm
                         :constraint => constraint_sql(constraints) }
     end
 
+    def binary(*args)
+      constraints = extract_constraints_from(args)
+      self.columns << { :name       => args.first,
+                        :type       => 'bytea',
+                        :constraint => constraint_sql(constraints) }
+    end
+
+    def timestamp(*args)
+      constraints = extract_constraints_from(args)
+      options     = extract_timestamp_options_from(args)
+      options[:timezone] ||= false
+      type = "timestamp "
+      if options[:precision]
+        type = type + "(#{options[:precision]}) "
+      end
+      if options[:timezone]
+        type = type + "with time zone"
+      else
+        type = type + "without time zone"
+      end
+      self.columns << { :name       => args.first,
+                        :type       => type,
+                        :constraint => constraint_sql(constraints) }
+    end
+    alias :datetime :timestamp
+
+    def date(*args)
+      constraints = extract_constraints_from(args)
+      self.columns << { :name       => args.first,
+                        :type       => 'date',
+                        :constraint => constraint_sql(constraints) }
+    end
+
+    def time(*args)
+      constraints = extract_constraints_from(args)
+      options     = extract_timestamp_options_from(args)
+      options[:timezone] ||= false
+      type = "time "
+      if options[:precision]
+        type = type + "(#{options[:precision]}) "
+      end
+      if options[:timezone]
+        type = type + "with time zone"
+      else
+        type = type + "without time zone"
+      end
+      self.columns << { :name       => args.first,
+                        :type       => type,
+                        :constraint => constraint_sql(constraints) }
+    end
+
+    def interval(*args)
+      constraints = extract_constraints_from(args)
+      options     = extract_interval_options_from(args)
+      options[:timezone] ||= false
+      type = "interval "
+      if options[:precision]
+        type = type + "(#{options[:precision]}) "
+      end
+      self.columns << { :name       => args.first,
+                        :type       => type,
+                        :constraint => constraint_sql(constraints) }
+    end
 
     def references(*args)
       self.columns << { :name       => "#{args.first}_id",
@@ -152,6 +208,17 @@ module Porm
     def extract_character_options_from(args)
       hash = args.last.kind_of?(Hash) ? args.last : {}
       Hash[hash.select { |k, v| :length == k }]
+    end
+
+    TIMEZONE_KEYS = [:timezone, :precision]
+    def extract_timestamp_options_from(args)
+      hash = args.last.kind_of?(Hash) ? args.last : {}
+      Hash[hash.select { |k, v| TIMEZONE_KEYS.include?(k) }]
+    end
+
+    def extract_interval_options_from(args)
+      hash = args.last.kind_of?(Hash) ? args.last : {}
+      Hash[hash.select { |k, v| :precision == k }]
     end
 
 
