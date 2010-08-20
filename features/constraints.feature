@@ -97,3 +97,22 @@ Feature: DB constraints
     """
     User.create(:login => nil)
     """
+
+  Scenario: Generic check constraint
+    Given I save the following as user.rb:
+    """
+      class User
+      include Porm::Table
+
+        attributes do |t|
+          t.integer :age, :check => 'age > 18'
+        end
+      end
+    """
+    Then the users table should have the following constraints:
+      | name            | definition       |
+      | users_age_check | CHECK (age > 18) |
+    And the following should fail:
+    """
+    User.create(:age => 17)
+    """

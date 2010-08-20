@@ -25,8 +25,10 @@ module Porm
     end
 
     def integer(*args)
+      constraint = args.last.kind_of?(Hash) ? args.pop : {}
       self.columns << { :name => args.first,
-        :type => 'integer' }
+                        :type => 'integer',
+                        :constraint => constraint_sql(constraint) }
     end
 
     def references(*args)
@@ -53,6 +55,9 @@ module Porm
       end
       if hash[:unique] == true
         sql << "UNIQUE"
+      end
+      if hash[:check]
+        sql << "CHECK ( #{hash[:check]} )"
       end
       sql.join(' ')
     end

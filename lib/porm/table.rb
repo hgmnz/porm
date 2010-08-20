@@ -21,6 +21,8 @@ module Porm
           false
         elsif e.error =~ /ERROR:  duplicate key value violates unique constraint/
           false
+        elsif e.error =~ /ERROR:  new row for relation "\w+" violates check constraint "\w+"/
+          false
         else
           raise e
         end

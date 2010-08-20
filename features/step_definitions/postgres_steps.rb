@@ -55,6 +55,20 @@ Then /^the (\w+) table should have the following index:$/ do |table_name, indexe
   actual_indexes.should include(*indexes.raw.flatten)
 end
 
+Then /^the (\w+) table should have the following constraints:$/ do |table_name, table|
+  actual_constraints = Porm.select(<<-CONSTRAINT_SQL)
+    SELECT r.conname as name, pg_catalog.pg_get_constraintdef(r.oid, true) as definition
+    FROM pg_catalog.pg_constraint r
+    WHERE r.conrelid = '#{table_oid(table_name)}' AND r.contype = 'c'
+  CONSTRAINT_SQL
+  table.hashes.each do |row|
+    actual_constraints.detect { |c| c['name'] == row['name'] }['definition'].should == row['definition']
+  end
+
+end
+
+
+
 module OidHelper
   def table_oid(table_name)
     Porm.select(<<-OID_SELECT)[0]['oid'].to_i
