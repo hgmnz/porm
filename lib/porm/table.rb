@@ -19,6 +19,8 @@ module Porm
           false
         elsif e.error =~ /ERROR:  null value in column "\w+" violates not-null constraint/
           false
+        elsif e.error =~ /ERROR:  duplicate key value violates unique constraint/
+          false
         else
           raise e
         end

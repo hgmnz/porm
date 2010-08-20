@@ -15,3 +15,9 @@ Then /^the following should fail:$/ do |code|
   eval(code).on_failure(lambda { result = 'foo' })
   result.should == 'foo'
 end
+
+Then /^the following should pass:$/ do |code|
+  result = nil
+  eval(code).on_success(lambda { result = 'foo' })
+  result.should == 'foo'
+end

@@ -45,3 +45,25 @@ Feature: DB constraints
     """
     User.create(:login => nil)
     """
+
+  Scenario: Uniqueness
+    Given I save the following as user.rb:
+    """
+      class User
+      include Porm::Table
+
+        attributes do |t|
+          t.string :login, :unique => true
+        end
+      end
+    """
+    Then the users table should have the following index:
+      | CREATE UNIQUE INDEX users_pkey ON users USING btree (id) |
+    And the following should pass:
+    """
+    User.create(:login => 'hgimenez')
+    """
+    But the following should fail:
+    """
+    User.create(:login => 'hgimenez')
+    """

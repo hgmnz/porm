@@ -52,7 +52,7 @@ Then /^the (\w+) table should have the following index:$/ do |table_name, indexe
     FROM pg_catalog.pg_class c, pg_catalog.pg_class c2, pg_catalog.pg_index i
     WHERE c.oid = '#{table_oid(table_name)}' AND c.oid = i.indrelid AND i.indexrelid = c2.oid
   INDEX_SQL
-  indexes.raw.flatten.should include(*actual_indexes)
+  actual_indexes.should include(*indexes.raw.flatten)
 end
 
 module OidHelper

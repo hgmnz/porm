@@ -47,7 +47,13 @@ module Porm
     end
 
     def constraint_sql(hash)
-      "NOT NULL" if hash[:null] == false
+      sql = []
+      if hash[:null] == false
+        sql << "NOT NULL"
+      end
+      if hash[:unique] == true
+        sql << "UNIQUE"
+      end
     end
 
   end
