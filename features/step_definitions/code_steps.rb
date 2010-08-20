@@ -13,11 +13,11 @@ end
 Then /^the following should fail:$/ do |code|
   result = nil
   eval(code).on_failure(lambda { result = 'foo' })
-  result.should == 'foo'
+  raise "Expected the following code to pass:\n#{code}" unless result == 'foo'
 end
 
 Then /^the following should pass:$/ do |code|
   result = nil
   eval(code).on_success(lambda { result = 'foo' })
-  result.should == 'foo'
+  raise "Expected the following code to fail:\n\t#{code}" unless result == 'foo'
 end

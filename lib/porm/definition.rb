@@ -15,8 +15,10 @@ module Porm
     end
 
     def datetime(*args)
+      constraint = args.last.kind_of?(Hash) ? args.pop : {}
       self.columns << { :name => args.first,
-        :type => 'timestamp without time zone' }
+                        :type => 'timestamp without time zone',
+                        :constraint => constraint_sql(constraint) }
     end
 
     def boolean(*args)
