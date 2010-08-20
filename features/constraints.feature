@@ -56,6 +56,7 @@ Feature: DB constraints
       | integer   | integer                     |
       | string    | character varying(255)      |
       | datetime  | timestamp without time zone |
+      | boolean   | boolean                     |
 
   Scenario Outline: Uniqueness
     Given I save the following as user.rb:
