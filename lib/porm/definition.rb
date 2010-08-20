@@ -9,8 +9,11 @@ module Porm
 
     def string(*args)
       constraints = extract_constraints_from(args)
+      options     = extract_character_options_from(args)
+      type = "character varying"
+      type = type + "(#{options[:length]})" if options[:length]
       self.columns << { :name       => args.first,
-                        :type       => 'character varying(255)',
+                        :type       => type,
                         :constraint => constraint_sql(constraints) }
     end
 
@@ -62,6 +65,17 @@ module Porm
     end
     alias :decimal :numeric
 
+    def char(*args)
+      constraints = extract_constraints_from(args)
+      options     = extract_character_options_from(args)
+      type = "character"
+      type = type + "(#{options[:length]})" if options[:length]
+      self.columns << { :name       => args.first,
+                        :type       => type,
+                        :constraint => constraint_sql(constraints) }
+    end
+    alias :character :char
+
     def real(*args)
       constraints = extract_constraints_from(args)
       self.columns << { :name       => args.first,
@@ -75,6 +89,21 @@ module Porm
                         :type       => 'double precision',
                         :constraint => constraint_sql(constraints) }
     end
+
+    def money(*args)
+      constraints = extract_constraints_from(args)
+      self.columns << { :name       => args.first,
+                        :type       => 'money',
+                        :constraint => constraint_sql(constraints) }
+    end
+
+    def text(*args)
+      constraints = extract_constraints_from(args)
+      self.columns << { :name       => args.first,
+                        :type       => 'text',
+                        :constraint => constraint_sql(constraints) }
+    end
+
 
     def references(*args)
       self.columns << { :name       => "#{args.first}_id",
@@ -119,6 +148,12 @@ module Porm
       hash = args.last.kind_of?(Hash) ? args.last : {}
       Hash[hash.select { |k, v| OPTION_KEYS.include?(k) }]
     end
+
+    def extract_character_options_from(args)
+      hash = args.last.kind_of?(Hash) ? args.last : {}
+      Hash[hash.select { |k, v| :length == k }]
+    end
+
 
   end
 end

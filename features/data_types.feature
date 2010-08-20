@@ -20,7 +20,8 @@ Feature: Postgres Data Types
       | integer   | integer                     |                                |
       | smallint  | smallint                    |                                |
       | bigint    | bigint                      |                                |
-      | string    | character varying(255)      |                                |
+      | string    | character varying           |                                |
+      | string    | character varying(255)      | , :length => 255               |
       | datetime  | timestamp without time zone |                                |
       | boolean   | boolean                     |                                |
       | numeric   | numeric(2,0)                | , :precision => 2              |
@@ -29,3 +30,8 @@ Feature: Postgres Data Types
       | decimal   | numeric(3,2)                | , :precision => 3, :scale => 2 |
       | real      | real                        |                                |
       | double    | double precision            |                                |
+      | money     | money                       |                                |
+      | char      | character(10)               | , :length => 10                |
+      | character | character(10)               | , :length => 10                |
+      | char      | character(1)                |                                |
+      | text      | text                        |                                |
