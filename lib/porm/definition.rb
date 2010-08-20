@@ -54,6 +54,7 @@ module Porm
       if hash[:unique] == true
         sql << "UNIQUE"
       end
+      sql.join(' ')
     end
 
   end

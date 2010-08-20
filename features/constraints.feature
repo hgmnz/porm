@@ -67,3 +67,33 @@ Feature: DB constraints
     """
     User.create(:login => 'hgimenez')
     """
+
+  Scenario: Unique and not null
+    Given I save the following as user.rb:
+    """
+      class User
+      include Porm::Table
+
+        attributes do |t|
+          t.string :login, :unique => true, :null => false
+        end
+      end
+    """
+    Then the users table should exist with the following columns:
+      | name          | type                        | not null |
+      | id            | integer                     | t        |
+      | login         | character varying(255)      | t        |
+    And the users table should have the following index:
+      | CREATE UNIQUE INDEX users_pkey ON users USING btree (id) |
+    And the following should pass:
+    """
+    User.create(:login => 'hgimenez')
+    """
+    But the following should fail:
+    """
+    User.create(:login => 'hgimenez')
+    """
+    And the following should fail:
+    """
+    User.create(:login => nil)
+    """
