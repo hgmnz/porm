@@ -161,6 +161,30 @@ module Porm
                         :constraint => constraint_sql(constraints) }
     end
 
+    def inet(*args)
+      constraints = extract_constraints_from(args)
+      self.columns << { :name       => args.first,
+                        :type       => 'inet',
+                        :constraint => constraint_sql(constraints) }
+    end
+    alias :ip_address :inet
+
+    def cidr(*args)
+      constraints = extract_constraints_from(args)
+      self.columns << { :name       => args.first,
+                        :type       => 'cidr',
+                        :constraint => constraint_sql(constraints) }
+    end
+    alias :network :cidr
+
+    def macaddr(*args)
+      constraints = extract_constraints_from(args)
+      self.columns << { :name       => args.first,
+                        :type       => 'macaddr',
+                        :constraint => constraint_sql(constraints) }
+    end
+    alias :mac_address :macaddr
+
     def references(*args)
       self.columns << { :name       => "#{args.first}_id",
                         :type       => 'integer',

@@ -59,3 +59,12 @@ Feature: Postgres Data Types
       | time      | time(5) with time zone         | , :precision => 5, :timezone => true |
       | interval  | interval                       |                                      |
       | interval  | interval(5)                    | , :precision => 5                    |
+
+  Scenarios: network types
+    | data-type   | pg-data-type | extra-options |
+    | inet        | inet         |               |
+    | ip_address  | inet         |               |
+    | cidr        | cidr         |               |
+    | network     | cidr         |               |
+    | macaddr     | macaddr      |               |
+    | mac_address | macaddr      |               |
